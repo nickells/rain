@@ -1,0 +1,30 @@
+<html>
+  <head></head>
+  <style>
+    body {
+      margin: 0;
+    }
+    .drop {
+      position: absolute;
+      background-color: 'transparent';
+      border: 3px solid black;
+      border-radius: 100%;
+      animation: droplet 200ms ease-out;
+    }
+
+    @keyframes droplet {
+      from {
+        transform: scale(0);
+      }
+      to {
+        transform: scale(1.5);
+        opacity: 0;
+      }
+    }
+  </style>
+  <body>
+    <button id="init">Init</button>
+    <button id="drop">MORE</button>
+    <script src="bundle.js"></script>
+  </body>
+</html>
