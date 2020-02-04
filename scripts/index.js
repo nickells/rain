@@ -4,10 +4,23 @@ import * as dat from 'dat.gui';
 // Globals
 let audioCtx, gainNode, reverb
 
+/*
+  TO DO
+  LPF THE WHOLE THING
+  FIGURE OUT HOW MANY OSC WE USE
+  REMOVE THE OSC SETTINGS
+  ADD A REAL CONVOLUTIONAL REVERB
+  THUNDER SOUNDS?
+*/
+
+const soundBank = new Array(16)
+
 class Drops {
   constructor(){
     this.baseFreq = 75
     this.freqVariance = 0.5
+
+    this.decayTime = 0.015
     this.baseFilter = 340
     this.filterVariance = .25
     this.filterResonance = 4
@@ -33,12 +46,32 @@ class Drops {
     // reverb.connect(audioCtx.destination);
   }
 
-  drip(){
+  makeNoise(){
+    const noiseLength = 0.2 // seconds
+    const bufferSize = audioCtx.sampleRate * noiseLength;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    let data = buffer.getChannelData(0); // get data
+
+    // fill the buffer with noise
+    for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+    }
+    let noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    return noise
+  }
+
+  makeOsc(){
     const oscillator = audioCtx.createOscillator();
-    oscillator.type = 'square';
     const freq = numWithUncertainty(this.baseFreq, this.freqVariance)
     oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); // value in hertz
-  
+    return oscillator
+  }
+
+
+  drip(sound){
+    // let sound = this.makeNoise()
+    // let sound = this.makeOsc()
     const biquadFilter = audioCtx.createBiquadFilter();
     const filter = numWithUncertainty(this.baseFilter, this.filterVariance);
     biquadFilter.frequency.value = filter;
@@ -48,31 +81,31 @@ class Drops {
     const panNode = audioCtx.createStereoPanner();
     const pan = 1 - (Math.random() * 2)
     panNode.pan.setValueAtTime(pan, audioCtx.currentTime)
+    sound.connect(panNode)
     
     const gainNode = audioCtx.createGain();
-    oscillator.start();
+    sound.start();
     gainNode.gain.setValueAtTime(this.gain, audioCtx.currentTime)
-    // gainNode.gain.setTargetAtTime(this.gain, audioCtx.currentTime, 0.008)
-    
-    oscillator.connect(panNode)
+    // gainNode.gain.setTargetAtTime(this.gain, audioCtx.currentTime, 0.015)
     panNode.connect(biquadFilter)
     biquadFilter.connect(gainNode)
-    gainNode.connect(reverb.input);
+    // gainNode.connect(reverb.input);
     gainNode.connect(audioCtx.destination)
     
     let duration = numWithUncertainty(this.duration)
     
     setTimeout(() => {
-      // gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.008)
-      // gainNode.gain.setValueAtTime(0, audioCtx.currentTime, 1)
-      oscillator.stop()
+      gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, this.decayTime)
+      // gainNode.gain.setValueAtTime(0, audioCtx.currentTime)
+      // sound.stop()
 
       // todo: garbage collect?
-      oscillator.disconnect(panNode)
+      // sound.disconnect(panNode)
     }, duration)
   
     this.createVisual(
-      freq / (this.baseFreq + (this.baseFreq * this.freqVariance)),
+      1,
+      // freq / (this.baseFreq + (this.baseFreq * this.freqVariance)),
       pan,
       filter / (this.baseFilter + (this.baseFilter * this.filterVariance)),
       duration
@@ -100,7 +133,7 @@ class Drops {
 
   start(){
     const rain = () => {
-      this.drip()
+      this.drip(this.makeNoise())
       setTimeout(rain, numWithUncertainty(this.interval, this.intervalVariance))
     }
     rain()
@@ -113,10 +146,6 @@ const numWithUncertainty = (num, percent = 0.25, start = 0) => {
 }
 
 
-const makeNoiseBuffer = () => {
-
-}
-
 const Rain = new Drops
 
 
@@ -125,7 +154,7 @@ document.getElementById('drop').addEventListener('click', () => {
 })
 
 document.getElementById('one').addEventListener('click', () => {
-  Rain.drip()
+  Rain.drip(Rain.makeNoise())
 })
 
 window.onload = function() {
@@ -134,10 +163,11 @@ window.onload = function() {
   const freq = gui.addFolder('droplet')
   const filter = gui.addFolder('filter')
   // const droplet = gui.addFolder('droplet')
-  freq.add(Rain, 'baseFreq', 0, 2000)
-  freq.add(Rain, 'freqVariance', 0, 2)
-  freq.add(Rain, 'duration', 0.1, 5)
-  freq.add(Rain, 'gain', 0, 1)
+  // freq.add(Rain, 'baseFreq', 0, 2000)
+  // freq.add(Rain, 'freqVariance', 0, 2)
+  freq.add(Rain, 'decayTime', 0.015, 1)
+  freq.add(Rain, 'duration', 0.1, 100)
+  freq.add(Rain, 'gain', 0, 10)
   filter.add(Rain, 'baseFilter', 0, 2000)
   filter.add(Rain, 'filterVariance', 0, 2)
   filter.add(Rain, 'filterResonance', 0, 100)
@@ -145,9 +175,9 @@ window.onload = function() {
   gui.add(Rain, 'interval', 0, 500)
   gui.add(Rain, 'intervalVariance', 0, 1)
   
-  const reverb = gui.addFolder('reverb')
-  reverb.add(Rain, 'reverbSeconds', 0.001, 1)
-  reverb.add(Rain, 'reverbDecay', 0.001, 1)
+  // const reverb = gui.addFolder('reverb')
+  // reverb.add(Rain, 'reverbSeconds', 0.001, 1)
+  // reverb.add(Rain, 'reverbDecay', 0.001, 1)
   freq.open()
   filter.open()
   reverb.open();
