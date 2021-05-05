@@ -18,6 +18,8 @@ document.body.style.setProperty('--fall-speed', FALL_SPEED)
   THUNDER SOUNDS?
 */
 
+const pan = () => (Math.random() * 2) - 1
+
 const soundBank = []
 
 const panner = (posX, posY, posZ = 0) => {
@@ -119,12 +121,9 @@ class Drops {
   }
 
 
-  drip(){
-    console.log('drip')
+  drip(positionX = pan(), positionZ = pan()){
     const sound = this.getNoiseBuffer()
-    const pan = () => 0.8 - (Math.random() * 1.6)
-    const positionX = pan()
-    const positionZ = pan()
+    
     const panNode = panner(positionX, 0, positionZ)
     
     const biquadFilter = audioCtx.createBiquadFilter();
@@ -222,6 +221,13 @@ document.getElementById('drop').addEventListener('click', (event) => {
 
 document.getElementById('one').addEventListener('click', () => {
   Rain.drip()
+})
+
+area.addEventListener('click', (evt) => {
+  console.log(evt)
+  const X = (((evt.pageX - 50) / window.innerWidth) *  2) - 1; 
+  const Y = (((evt.offsetY - 60) / area.offsetHeight) * 2) - 1;
+  Rain.drip(X, Y);
 })
 
 window.onload = function() {
