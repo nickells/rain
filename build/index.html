@@ -1,31 +1,102 @@
 <html>
   <head></head>
   <style>
+    
     body {
       margin: 0;
+      background: black;
+      position: relative;
+      overflow: hidden;
     }
     .drop {
       position: absolute;
-      background-color: 'transparent';
-      border: 3px solid black;
-      border-radius: 100%;
-      top: 50%;
-      animation: droplet 200ms ease-out;
     }
 
-    @keyframes droplet {
-      from {
-        transform: scale(0);
+    /* circle */
+    .drop:after {
+      content: '';
+      border: 3px solid #DDD;
+      border-radius: 100%;
+      width: 100%;
+      height: 100%;
+      /* top: 50%; */
+      position: absolute;
+
+      animation-duration: 500ms;
+      animation-timing-function: ease-out;
+      animation-name: droplet;
+      animation-iteration-count: 1;
+      animation-fill-mode: forwards;
+      animation-delay: calc(var(--fall-speed) * 1ms);
+      
+      /* animation start state */
+      transform: scale(0);
+      opacity: 0.5;
+    }
+
+    /* line */
+    .drop:before {
+      content: '';
+      width: 1px;
+      display: block;
+      position: absolute;
+      left: 50%;
+      bottom: 50%;
+      height: 500vh;
+      background-color: white;
+      animation-name: fall;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+      animation-duration: calc(var(--fall-speed) * 2ms);
+      opacity: 0.2;
+      transform-origin: bottom;
+    }
+
+    #controls {
+      position: absolute;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-100%) scaleY(1);
+        opacity: 0;
       }
-      to {
-        transform: scale(1.5);
+      50% {
+        transform: translateY(0%) scaleY(1);
+        opacity: 0.2;
+      }
+      100% {
+        transform: translateY(0%) scaleY(0);
         opacity: 0;
       }
     }
+
+    @keyframes droplet {
+      0% {
+        transform: scale(0);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(3);
+        opacity: 0;
+      }
+    }
+
+    #area {
+      width: 100%;
+      height: 100vh;
+      position: absolute;
+      /* bottom: 0px; */
+      transform-origin: bottom;
+      transform: translate3d(0, 0, 0) rotateX(74deg) perspective(10px);
+    }
   </style>
   <body>
-    <button id="drop">MORE</button>
-    <button id="one">drip</button>
+    <div id="controls">
+      <button id="drop">Start rain</button>
+      <button id="one">Drip a drop</button>
+    </div>
+    <div id="area"></div>
     <script src="bundle.js"></script>
   </body>
 </html>
